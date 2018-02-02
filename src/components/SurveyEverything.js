@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { GridList, GridTile, RaisedButton, IconMenu, MenuItem, IconButton, RefreshIndicator } from 'material-ui'
-import StarBorder from 'material-ui/svg-icons/toggle/star-border'
+import { Card, CardTitle, CardMedia, CardActions, RefreshIndicator, RaisedButton } from 'material-ui'
+import StarRatingComponent from 'react-star-rating-component'
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
 import { app } from '../base'
 
@@ -16,14 +16,18 @@ class SurveyEverything extends Component {
             recipes: [],
             loading: true,
             nrStage: 0,
-            dishTypesStages: ['Main Dishes', 'Salads']
+            dishTypesStages: ['Main Dishes', 'Salads'],
+            ratings: [],
+            ratingStars: 3
         }
         this.goToNextStage = this.goToNextStage.bind(this)
-        this.filerRecipes = this.filerRecipes.bind(this)
+        this.filterRecipes = this.filterRecipes.bind(this)
+        this.saveResults = this.saveResults.bind(this)
     }
 
     getItems = () => {
-        var recipesReceived = []
+        let recipesReceived = []
+        let rated = []
         let ref = app.database().ref()
         ref.once('value', function(snapshot) {
           	snapshot.forEach(function(child) {
@@ -32,22 +36,28 @@ class SurveyEverything extends Component {
                     photo: child.val().images[0].imageUrlsBySize[360],
                     dishType: child.val().attributes.course,
                     _key: child.key
-                });
+                })
 			});
         }).catch((error) => {
-            console.log("The read failed: " + error.message);
+            console.log('The read failed: ' + error.message);
         }).then(() => {
             this.setState({
                 recipes: recipesReceived,
                 loading: false
             });
-        }); 
+        });
     }
     
     componentDidMount = () => {
-    this.getItems();
+        this.getItems();
     }
     
+    filterRecipes = (arr, value) => {
+        var result = [];
+        arr.forEach(function(o){if (o.dishType.includes(value)) result.push(o);} );
+        return result 
+    }
+
     goToNextStage = () => {
         if (this.state.nrStage < (this.state.dishTypesStages.length - 1)){
             this.setState(({nrStage}) => ({
@@ -58,11 +68,11 @@ class SurveyEverything extends Component {
         }
     }
 
-     filerRecipes = (arr, value) => {
-        var result = [];
-        arr.forEach(function(o){if (o.dishType.includes(value)) result.push(o);} );
-        return result 
-      }
+    saveResults = (value, privValue, name) => {
+        let temp = {_key: name, rating: value}
+        this.state.ratings.push(temp)
+        this.setState({ratings: this.state.ratings})
+    };
 
     render() {
         if (this.state.loading === true) {
@@ -72,7 +82,7 @@ class SurveyEverything extends Component {
 					<h3>Loading</h3>
 					<RefreshIndicator
 						size={50}
-						status="loading"
+						status='loading'
 						left={0}
 						top={0}
 						style={{display: 'inline-block', position: 'relative'}}
@@ -83,29 +93,23 @@ class SurveyEverything extends Component {
         } else {
             return (
                 <MuiThemeProvider>
-                        <GridList
-                            cellHeight='100%'>
-                            {this.filerRecipes(this.state.recipes, this.state.dishTypesStages[this.state.nrStage]).map((tile) => (
-                                <GridTile
-                                    title={tile.name}
-                                    actionIcon={
-                                        <IconMenu
-                                            iconButtonElement={<IconButton><StarBorder color='white'/></IconButton>}
-                                            anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
-                                            targetOrigin={{horizontal: 'right', vertical: 'bottom'}}
-                                            onItemClick={(ev, obj, idx) => console.log(`${tile._key} ${obj.props.value}`)}>
-                                            <MenuItem value='5' primaryText='5'/>
-                                            <MenuItem value='4' primaryText='4'/>
-                                            <MenuItem value='3' primaryText='3'/>
-                                            <MenuItem value='2' primaryText='2'/>
-                                            <MenuItem value='1' primaryText='1'/>
-                                        </IconMenu>
-                                    }>                        
-                                <img src={tile.photo} alt='' translatex='0'/>
-                                </GridTile>
-                            ))}
-                        </GridList>
-                    <RaisedButton label="NEXT" primary={true} onClick={this.goToNextStage} style={buttonStyle}/>
+                    {this.filterRecipes(this.state.recipes, this.state.dishTypesStages[this.state.nrStage]).map((tile) => (
+                        <Card style={{width:'50%', display: 'inline-block', padding: '10px'}}>
+                        <CardMedia
+                            overlay={<CardTitle title={tile.name}/>}
+                            >
+                            <img src={tile.photo} alt="" />
+                        </CardMedia>
+                        <CardActions>
+                            <StarRatingComponent 
+                            name={tile._key}
+                            starCount={5}
+                            onStarClick={(value, privValue, nm) => this.saveResults(value, privValue, nm)}
+                            />
+                        </CardActions>
+                    </Card>
+                    ))}
+                    <RaisedButton label='NEXT' primary={true} onClick={this.goToNextStage} style={buttonStyle}/>
                 </MuiThemeProvider>
             )
         }

@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { BrowserRouter, Route, Redirect } from 'react-router-dom'
 import Header from './components/Header'
 import Start from './components/Start'
+import Survey from './components/Survey'
 import SurveyEverything from './components/SurveyEverything'
 import SurveyWithoutMeat from './components/SurveyWithoutMeat'
 import SurveyWithoutFish from './components/SurveyWithoutFish'
@@ -21,13 +22,8 @@ class App extends Component {
                 <Route exact path='/' render={() => (
                     <Redirect to="/start"/>)}/>
                 <Route exact path='/start' component={Start} />
-                <Route exact path='/surveyeverything' component={SurveyEverything} />
-                <Route exact path='/surveywithoutmeat' component={SurveyWithoutMeat} />
-                <Route exact path='/surveywithoutfish' component={SurveyWithoutFish} />
-                <Route exact path='/surveywithoutdiary' component={SurveyWithoutDiary} />
-                <Route exact path='/surveyvegetarian' component={SurveyVegetarian} />
-                <Route exact path='/surveyvegan' component={SurveyVegan} />
-                <Route exact path='/end' component={End} />
+                <Route exact path='/survey' component={Survey} />
+                <Route exact path='/end' component={End} /> 
               </div>
             </div>
           </BrowserRouter>
@@ -37,3 +33,11 @@ class App extends Component {
 }
 
 export default App;
+
+/*                 <Route exact path='/surveyeverything' component={SurveyEverything} />
+                <Route exact path='/surveywithoutmeat' component={SurveyWithoutMeat} />
+                <Route exact path='/surveywithoutfish' component={SurveyWithoutFish} />
+                <Route exact path='/surveywithoutdiary' component={SurveyWithoutDiary} />
+                <Route exact path='/surveyvegetarian' component={SurveyVegetarian} />
+                <Route exact path='/surveyvegan' component={SurveyVegan} />
+                <Route exact path='/end' component={End} /> */

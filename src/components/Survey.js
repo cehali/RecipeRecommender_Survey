@@ -32,9 +32,12 @@ const arraysEqual = (arr1, arr2) => {
     return true;
 }
 
-class SurveyWithoutMeat extends Component {
+class Survey extends Component {
     constructor(props) {
         super(props);
+        this.getItems = this.getItems.bind(this)
+        this.goToNextStage = this.goToNextStage.bind(this)
+        this.saveRates = this.saveRates.bind(this)
         this.state = {
             recipes: [],
             loading: true,
@@ -46,18 +49,17 @@ class SurveyWithoutMeat extends Component {
             canSubmit: false,
             allrecipesKeys: []
         }
-        this.goToNextStage = this.goToNextStage.bind(this)
-        this.saveRates = this.saveRates.bind(this)
     }
 
     getItems = () => {
         let recipesFiltered = []
         let ref = app.database().ref('/recipes')
+        let typeofDiet = this.state.dietType
         ref.once('value', function(snapshot) {
             for (let n=0; n<dishTypesStages.length; n++) {
                 var recipesReceived = []
           	    snapshot.forEach(function(child) {
-                    if (child.val().attributes.course.includes(dishTypesStages[n]) && child.val().dietType.includes('withoutMeat')) {  
+                    if (child.val().attributes.course.includes(dishTypesStages[n]) && child.val().dietType.includes(typeofDiet)) {  
                         recipesReceived.push({
                             name: child.val().name,
                             photo: child.val().images[0].imageUrlsBySize[360],
@@ -173,4 +175,4 @@ class SurveyWithoutMeat extends Component {
     }
 }
 
-export default SurveyWithoutMeat
+export default Survey

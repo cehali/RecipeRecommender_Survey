@@ -120,8 +120,6 @@ class Survey extends Component {
         let ratingsKeys = []
         ratingsKeys = this.state.ratings.map(a => a._key)
         let ratingsKeysSet = [...new Set(ratingsKeys)]
-        console.log(ratingsKeysSet)
-        console.log(this.state.allrecipesKeys)
         if (arraysEqual(ratingsKeysSet.sort(), this.state.allrecipesKeys.sort())) {
             this.setState({canSubmit: true})
         }

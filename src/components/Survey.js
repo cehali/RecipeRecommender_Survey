@@ -47,49 +47,49 @@ class Survey extends Component {
             rateStars: [0, 0, 0, 0],
             dietType: this.props.location.state.dietType,
             canSubmit: false,
-            allrecipesKeys: []
+            allrecipesKeys: [],
+            tempKeys: []
         }
     }
 
-    getItems = () => {
+    getItems = (ns) => {
         let recipesFiltered = []
-        let ref = app.database().ref('/recipes')
         let typeofDiet = this.state.dietType
+        let ref = app.database().ref('/recipes/').orderByChild(`course_diet/${dishTypesStages[ns]}_${typeofDiet}`).equalTo(`${dishTypesStages[ns]}_${typeofDiet}`)
         ref.once('value', function(snapshot) {
-            for (let n=0; n<dishTypesStages.length; n++) {
-                var recipesReceived = []
-          	    snapshot.forEach(function(child) {
-                    if (child.val().attributes.course.includes(dishTypesStages[n]) && child.val().dietType.includes(typeofDiet)) {  
-                        recipesReceived.push({
-                            name: child.val().name,
-                            photo: child.val().images[0].imageUrlsBySize[360],
-                            dishType: child.val().attributes.course,
-                            _key: child.key
-                        });
-                    }
-                });
-                recipesFiltered.push(randomizeArray(recipesReceived))
-            }
+            var recipesReceived = []
+            snapshot.forEach(function(child) {
+                    recipesReceived.push({
+                        name: child.val().name,
+                        photo: child.val().images[0].imageUrlsBySize[360],
+                        dishType: child.val().attributes.course,
+                        _key: child.key
+                    });
+            });
+            recipesFiltered.push(randomizeArray(recipesReceived))
         }).catch((error) => {
             console.log("The read failed: " + error.message);
         }).then(() => {
             let recipesKeysFiltered = [...new Set(recipesFiltered[0].map(a => a._key))]
-			this.setState({
+            let totalKeys = this.state.allrecipesKeys.slice().concat(recipesKeysFiltered)
+            this.setState({
                 recipes: recipesFiltered,
                 loading: false,
-                allrecipesKeys: recipesKeysFiltered
+                allrecipesKeys: totalKeys
             });
         }); 
     }
     
     componentDidMount = () => {
-    	this.getItems();
+    	this.getItems(0);
     }
     
     goToNextStage = () => {
         if (this.state.nrStage < (dishTypesStages.length - 1)){
+            this.getItems(1)
+            this.setState({loading: true})
             let rateNextStage = [0, 0, 0, 0]
-            let recipesKeys = this.state.recipes[this.state.nrStage+1].map(a => a._key)
+            let recipesKeys = this.state.recipes[0].map(a => a._key)
             let concatedKeys = [...new Set(this.state.allrecipesKeys.concat(recipesKeys))]
             this.setState(({nrStage}) => ({
                 nrStage: nrStage + 1,
@@ -120,6 +120,8 @@ class Survey extends Component {
         let ratingsKeys = []
         ratingsKeys = this.state.ratings.map(a => a._key)
         let ratingsKeysSet = [...new Set(ratingsKeys)]
+        console.log(ratingsKeysSet)
+        console.log(this.state.allrecipesKeys)
         if (arraysEqual(ratingsKeysSet.sort(), this.state.allrecipesKeys.sort())) {
             this.setState({canSubmit: true})
         }
@@ -145,7 +147,7 @@ class Survey extends Component {
             return (
                 <MuiThemeProvider>
                     <div>
-                    {this.state.recipes[this.state.nrStage].map((tile, index) => (
+                    {this.state.recipes[0].map((tile, index) => (
                         <Card style={{width:'50%', display: 'inline-block', padding: '10px'}}>
                         <CardMedia
                             overlay={<CardTitle title={tile.name}/>}
